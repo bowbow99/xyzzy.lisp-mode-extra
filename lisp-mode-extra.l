@@ -131,7 +131,19 @@
          (insert *last-command-char* arg)))))
 
 (defun lisp-electric-insert-double-quote ()
-  "ダブルクォート（文字列の開始/終了）をてきとーに入力したりしなかったり。"
+  "ダブルクォート（文字列の開始/終了）をてきとーに入力したりしなかったり。
+
+何もないところでは文字列を開始する \" を挿入し、必要であれば文字列を閉じる
+\" も挿入します。
+
+    abc|def  ->  abc\"|\"def
+
+文字列中では、カーソルが文字列終了の \" の前であればその \" の後へカーソル
+を移動し、そうでなければエスケープされたダブルクォート \\\" を挿入します。
+
+    \"abc|def\" -> \"abc\\\"def\"
+
+コメント内では単純に \" を挿入します。"
   (interactive "*")
   (case (parse-point-syntax)
     (:string
@@ -147,6 +159,7 @@
      (insert *last-command-char*)
      (save-excursion
        (let ((opoint (point)))
+         ;; FIXME: パラグラフ内にコメントだった " があると間違える。
          (when (and (forward-paragraph)
                     (eql (parse-point-syntax) :string))
            (goto-char opoint)
@@ -157,7 +170,6 @@
   (define-key ed::*lisp-mode-map* #\( 'lisp-electric-insert-open)
   (define-key ed::*lisp-mode-map* #\) 'lisp-electric-insert-close)
   (define-key ed::*lisp-mode-map* #\" 'lisp-electric-insert-double-quote))
-
 
 ;;;;
 
