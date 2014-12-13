@@ -9,7 +9,7 @@ lisp-mode に追加する雑多なものたち。
 * lisp-electric-insert-open
 * lisp-electric-insert-close
 * lisp-electric-insert-double-quote
-
+* calc-lisp-indent+
 
 使い方など
 ----------

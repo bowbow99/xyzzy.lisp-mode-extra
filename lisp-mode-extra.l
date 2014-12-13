@@ -33,13 +33,13 @@
       (goto-char point))
     (cond ((scan-buffer +lisp-in-package-regexp+
                         :reverse t :regexp t)
-           (match-string 1))
+            (match-string 1))
           (*buffer-package*)
           ((and (goto-char (point-min))
                 (scan-buffer "package: \\(\\(?:\\sw\\|\\s_\\)+\\).*-\\*-[ \t]*$"
                              :regexp t :limit 3000)
                 (eql (parse-point-syntax) :comment))
-           (match-string 1))
+            (match-string 1))
           ("user"))))
 
 (defun lisp-number-of-sexps-in (start &optional end)
@@ -148,26 +148,26 @@
   (interactive "*")
   (case (parse-point-syntax)
     (:string
-     (cond ((and (eql (following-char) *last-command-char*)
-                 (not (syntax-escape-p (preceding-char))))
-            (forward-char))
-           ((save-excursion
-              (and (goto-char (point-max))
-                   (eql (parse-point-syntax) :string)))
-            (insert *last-command-char*))
-           (t
-            (insert #\\)
-            (insert *last-command-char*))))
+      (cond ((and (eql (following-char) *last-command-char*)
+                  (not (syntax-escape-p (preceding-char))))
+              (forward-char))
+            ((save-excursion
+               (and (goto-char (point-max))
+                    (eql (parse-point-syntax) :string)))
+              (insert *last-command-char*))
+            (t
+              (insert #\\)
+              (insert *last-command-char*))))
     (:comment
-     (insert *last-command-char*))
+      (insert *last-command-char*))
     (otherwise  ; 文字列の開始
-     (insert *last-command-char*)
-     (save-excursion
-       (let ((opoint (point)))
-         (when (and (forward-paragraph)
-                    (eql (parse-point-syntax) :string))
-           (goto-char opoint)
-           (insert *last-command-char*)))))
+      (insert *last-command-char*)
+      (save-excursion
+        (let ((opoint (point)))
+          (when (and (forward-paragraph)
+                     (eql (parse-point-syntax) :string))
+            (goto-char opoint)
+            (insert *last-command-char*)))))
     ))
 
 (defsetup electric-commands ()
@@ -176,7 +176,98 @@
   (define-key ed::*lisp-mode-map* #\" 'lisp-electric-insert-double-quote))
 
 
-;;;;
+;;;; Indentation
+
+(defun calc-lisp-indent+ (opoint)
+  (protect-match-data
+    (let ((begin-paren (and lisp-indent-close-paren
+                            (looking-at "[ \t]*)"))))
+      (goto-bol)
+      (when (eql (parse-point-syntax) :string)
+        (back-to-indentation)
+        (return-from calc-lisp-indent+
+          (current-column)))
+      (or (up-list -1 t)
+          (return-from calc-lisp-indent+ 0))
+      (cond
+       (begin-paren
+         (+ (current-column) lisp-paren-imaginary-offset))
+       ((or (looking-at "#")
+            (and (not (looking-back "#'"))
+                 (looking-back "'")))
+         (+ (current-column) 1))
+       (t
+         (let ((package (or (find-package (lisp-point-package-name))
+                            (and (stringp *buffer-package*)
+                                 (find-package *buffer-package*))
+                            *package*)))
+           ;; ed::lisp-indent-flet の対象
+           (when (save-excursion
+                   (when (and (up-list -1 t)
+                              (looking-for "((")
+                              (up-list -1 t))
+                     (forward-char 1)
+                     (multiple-value-bind (symbol found-p)
+                         (calc-lisp-indent-current-symbol package)
+                       (when found-p
+                         (get symbol 'lisp-indent-flet)))))
+             (return-from calc-lisp-indnet+
+               (+ (current-column) *lisp-body-indention*)))
+           ;;
+           (let ((column (progn
+                           (forward-char 1)
+                           (current-column))))
+             (multiple-value-bind (symbol found package-marker-p)
+                 (calc-lisp-indent-current-symbol package)
+               ;; operator が keyword の場合
+               #+nil
+               (when package-marker-p
+                 (return-from calc-lisp-indent+ column))
+               ;; (get SYMBOL 'ed::lisp-indent-clause) = N
+               ;; N 番目以降の sub forms は &body 扱い
+               (save-excursion
+                 (when (and (up-list -1 t)
+                            (forward-sexp -1 t)
+                            (up-list -1 t)
+                            (forward-char 1))
+                   (multiple-value-bind (symbol* found*)
+                       (calc-lisp-indent-current-symbol package)
+                     (when found*
+                       (let ((x (get symbol* 'lisp-indent-clause)))
+                         (when (and (numberp x)
+                                    (>= (lisp-number-of-sexps-in opoint) (1- x)))
+                           (return-from calc-lisp-indent+
+                             (+ (1- column)
+                                *lisp-body-indent*))))))))
+               ;; ed:lisp-indent-hook やマクロの &body
+               (let ((method (when found
+                               (or (get symbol 'lisp-indent-hook)
+                                   ;; マクロの &body に相当する場合
+                                   (let* ((args   (cadr (macro-function symbol)))
+                                          (before (when (find '&body args)
+                                                    (subseq args 0 (position '&body args)))))
+                                     (when before
+                                       (while (find (car before) '(&whole &environment))
+                                         (setq before (cddr before)))
+                                       (length before)))))))
+                 (cond ((numberp method)
+                         (let ((count (lisp-number-of-sexps-in opoint)))
+                           (+ (1- column)
+                              (* (if (< count method) 2 1)
+                                 *lisp-body-indent*))))
+                       (method
+                         (+ column -1 *lisp-body-indention*))
+                       (t
+                         (skip-chars-forward " \t")
+                         (if (or (eolp)
+                                 (looking-for ";"))
+                           (+ column (or *lisp-indent-offset* 0))
+                           (current-column)))))))))))))
+
+(defconstant +calc-lisp-indent-original+ #'calc-lisp-indent)
+
+(defsetup calc-lisp-indent+ ()
+  (setf (symbol-function 'calc-lisp-indent) #'calc-lisp-indent+))
 
 
 ;;; lisp-mode-extra.l ends here.
