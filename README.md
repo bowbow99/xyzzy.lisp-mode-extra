@@ -1,41 +1,41 @@
 lisp-mode-extra
 ===============
-lisp-mode �ɒǉ�����G���Ȃ��̂����B
+lisp-mode に追加する雑多なものたち。
 
-�ڍׂȐ���
+詳細な説明
 ----------
 
 
-�g����
+使い方
 ------
 
-### �K�v�Ȃ���
+### 必要なもの
 
-### �C���X�g�[��
+### インストール
 
-### �ݒ�
+### 設定
 
-### �g����
+### 使い方
 
-### �A���C���X�g�[��
+### アンインストール
 
 
-���̑�
+その他
 ------
 
-### �o�O�񍐁A�v�]�A����Ȃ�
+### バグ報告、要望、質問など
 * [Github Issues](https://github.com/bowbow99/xyzzy.lisp-mode-extra/issues)
-* [bowbow99 �̃c�C�b�^�[](https://twitter.com/bowbow99)
-* [bowbow99 �̂͂ă_](http://d.hatena.ne.jp/bowbow99)
-* 2ch �� xyzzy part.# �ɃJ�L�R
-* �����̃u���O�ɏ����Ă���
-* ���ɏ����ĕr�ɋl�߂ĊC�֗���
+* [bowbow99 のツイッター](https://twitter.com/bowbow99)
+* [bowbow99 のはてダ](http://d.hatena.ne.jp/bowbow99)
+* 2ch の xyzzy part.# にカキコ
+* 自分のブログに書いておく
+* 紙に書いて瓶に詰めて海へ流す
 
-### ������l�i�����j
+### 作った人（たち）
 
 * [bowbow99](https://github.com/bowbow99)
 
-### ���C�Z���X
+### ライセンス
 
 Copyright (c) 2014 bowbow99
 
