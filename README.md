@@ -4,20 +4,30 @@ lisp-mode に追加する雑多なものたち。
 
 詳細な説明
 ----------
+以下のコマンドやら何やらが含まれています。
+
+* lisp-electric-insert-open
+* lisp-electric-insert-close
+* lisp-electric-insert-double-quote
 
 
-使い方
-------
+使い方など
+----------
 
 ### 必要なもの
+* xyzzy version 0.2.2.242 以降（`si:*function-name*`）
 
 ### インストール
+（まだ）
 
 ### 設定
+`.xyzzy` などで
+
+    (require "lisp-mode-extra")
+    (lisp-mode-extra-setup)
 
 ### 使い方
-
-### アンインストール
+上記の設定をしておけば `lisp-mode` や `lisp-interaction-mode` で有効になります。
 
 
 その他
