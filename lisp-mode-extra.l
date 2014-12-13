@@ -144,22 +144,26 @@
     \"abc|def\" -> \"abc\\\"def\"
 
 コメント内では単純に \" を挿入します。"
+  ;; FIXME: パラグラフ内にコメントだった \" があると間違える。
   (interactive "*")
   (case (parse-point-syntax)
     (:string
-     (if (and (eql (following-char) *last-command-char*)
-              (not (syntax-escape-p (preceding-char))))
-       (forward-char)
-       (progn
-         (insert #\\)
-         (insert *last-command-char*))))
+     (cond ((and (eql (following-char) *last-command-char*)
+                 (not (syntax-escape-p (preceding-char))))
+            (forward-char))
+           ((save-excursion
+              (and (goto-char (point-max))
+                   (eql (parse-point-syntax) :string)))
+            (insert *last-command-char*))
+           (t
+            (insert #\\)
+            (insert *last-command-char*))))
     (:comment
      (insert *last-command-char*))
     (otherwise  ; 文字列の開始
      (insert *last-command-char*)
      (save-excursion
        (let ((opoint (point)))
-         ;; FIXME: パラグラフ内にコメントだった " があると間違える。
          (when (and (forward-paragraph)
                     (eql (parse-point-syntax) :string))
            (goto-char opoint)
@@ -170,6 +174,7 @@
   (define-key ed::*lisp-mode-map* #\( 'lisp-electric-insert-open)
   (define-key ed::*lisp-mode-map* #\) 'lisp-electric-insert-close)
   (define-key ed::*lisp-mode-map* #\" 'lisp-electric-insert-double-quote))
+
 
 ;;;;
 
