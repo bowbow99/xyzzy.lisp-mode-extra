@@ -215,7 +215,7 @@
                          (calc-lisp-indent-current-symbol package)
                        (when found-p
                          (get symbol 'lisp-indent-flet)))))
-             (return-from calc-lisp-indnet+
+             (return-from calc-lisp-indent+
                (+ (current-column) *lisp-body-indention*)))
            ;;
            (let ((column (progn
