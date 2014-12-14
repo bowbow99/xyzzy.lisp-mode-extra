@@ -6,11 +6,32 @@ lisp-mode に追加する雑多なものたち。
 ----------
 以下のコマンドやら何やらが含まれています。
 
-* lisp-electric-insert-open
-* lisp-electric-insert-close
-* lisp-electric-insert-double-quote
-* calc-lisp-indent+
-* lisp-post-save-process
+* `(` を入力時にカッコの対応を見て `)` を挿入したりしなかったり
+* `)` を入力時にカッコの対応を見てスキップしたり
+* `"` を入力時に文字列の状態を見て閉じたりエスケープしたり
+* インデント計算の変更
+  * 基本は標準と同じ
+  * `ed::lisp-indent-clause` プロパティで何かする（後述）
+* lisp ファイルを保存時にコンパイルやロード
+
+### `ed::lisp-indent-clause` のインデント
+
+	(setf (get 'SYMBOL 'ed::lisp-indent-clause) N)  ; N は数
+	(setf (get 'SYMBOL 'ed:lisp-indent-hook) 1)
+
+としておくと、`SYMBOL` をオペレータとする式の N 番目以降の引数式が暗黙の
+`progn` のようなカタチになります。
+
+	(SYMBOL
+	    (some stuff comes here...) ;N番目より前の式
+	  ;; N番目以降の式
+	  (clause comes here and
+	    (its "body" forms comes here)
+	  (more clauses...))
+
+xyzzy 標準では `handler-case` のみがこのインデントになっていますが、それ
+を他のオペレータでも利用できるようにしたものです。
+
 
 
 使い方など
