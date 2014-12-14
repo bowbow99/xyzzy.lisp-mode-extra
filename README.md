@@ -41,16 +41,18 @@ xyzzy 標準では `handler-case` のみがこのインデントになってい�
 ### 必要なもの
 * xyzzy version 0.2.2.242 以降（`si:*function-name*`）
 
-### インストール
-（まだ）
+### インストール＆設定
+作りかけですけど使ってみたい人は、とりあえずクローンして
 
-### 設定
+	% cd ${SITE_LISP}
+	% git clone https://github.com/bowbow99/xyzzy.lisp-mode-extra.git lisp-mode-extra
+
 `.xyzzy` などで
 
-    (require "lisp-mode-extra")
-    (lisp-mode-extra-setup)
+	(pushnew "${SITE_LISP}/lisp-mode-extra" *load-path* :test #'path-equal)
+	(require "lisp-mode-extra")
+	(lisp-mode-extra-setup)
 
-### 使い方
 上記の設定をしておけば `lisp-mode` や `lisp-interaction-mode` で有効になります。
 
 
