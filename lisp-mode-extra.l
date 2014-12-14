@@ -273,5 +273,76 @@
 (defsetup calc-lisp-indent+ ()
   (setf (symbol-function 'calc-lisp-indent) #'calc-lisp-indent+))
 
+
+;;;; Compile and Load on Save
+
+(export '(-lisp-load-on-save-
+          -lisp-compile-on-save-
+          lisp-compile/load-on-save
+          ))
+
+(defvar-local -lisp-load-on-save- :ask1
+  "*lisp ファイルを保存したときにロードするかどうか。
+:ask      -- 毎回確認する
+:ask1     -- 初回のみ確認する
+nil       -- しない
+それ以外  -- する"
+  ;; FIXME: :auto
+  )
+
+(defvar-local -lisp-compile-on-save- :auto
+  "*lisp ファイルを保存したときにコンパイルするかどうか
+:auto    -- FASL (*.lc) があればコンパイルする
+:ask     -- 毎回確認する
+:ask1    -- 初回のみ確認する
+nil      -- しない
+それ以外 -- する")
+
+(defvar-local -lisp-action-on-save-confirm-method- 'yes-or-no-p
+  "*lisp ファイルを保存時に何かするか確認する関数。
+関数はフォーマット文字列とその引数を受け取って、何かするか否かを nil
+か non-nil かで返すこと。")
+
+(defun lisp-compile-on-save-p ()
+  (let* ((src  (or (get-buffer-file-name)
+                   (return-from lisp-compile-on-save-p nil)))
+         (fasl
+           ;; FIXME: Recent version of xyzzy supports "*.lisp" so adding "c" isn't safe
+           (concat src "c")))
+    (unless src
+      (return-from lisp-compile-on-save-p nil))
+    (labels ((ask ()
+               (funcall -lisp-action-on-save-confirm-method- "コンパイルしますか？")))
+      (case -lisp-compile-on-save-
+        (:auto      (file-exist-p fasl))
+        (:ask       (ask))
+        (:ask1      (setf -lisp-compile-on-save- (ask)))
+        (otherwise  -lisp-compile-on-save-)))))
+
+(defun lisp-load-on-save-p ()
+  (let ((src (get-buffer-file-name)))
+    (unless src
+      (return-from lisp-load-on-save-p nil))
+    (labels ((ask ()
+               (funcall -lisp-action-on-save-confirm-method- "ロードしますか？")))
+      (case -lisp-load-on-save-
+        ;(:auto)
+        (:ask       (ask))
+        (:ask1      (setf -lisp-load-on-save- (ask)))
+        (otherwise  -lisp-load-on-save-)))))
+
+(defun lisp-compile/load-on-save ()
+  (when (member buffer-mode '(lisp-mode lisp-interaction-mode))
+    (let* ((src  (or (get-buffer-file-name)
+                     (return-from lisp-compile/load-on-save nil)))
+           (fasl (concat src "c")))
+      (when (lisp-compile-on-save-p)
+        (compile-file src))
+      (when (lisp-load-on-save-p)
+        (load (if (file-exist-p fasl) fasl src))))))
+
+(defsetup compile/load-on-save ()
+  (add-hook '*after-save-buffer-hook* 'lisp-compile/load-on-save))
+
 
 ;;; lisp-mode-extra.l ends here.

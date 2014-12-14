@@ -10,6 +10,8 @@ lisp-mode に追加する雑多なものたち。
 * lisp-electric-insert-close
 * lisp-electric-insert-double-quote
 * calc-lisp-indent+
+* lisp-post-save-process
+
 
 使い方など
 ----------
