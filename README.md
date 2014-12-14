@@ -27,6 +27,7 @@ lisp-mode に追加する雑多なものたち。
 	  ;; N番目以降の式
 	  (clause comes here and
 	    (its "body" forms comes here)
+	    ...)
 	  (more clauses...))
 
 xyzzy 標準では `handler-case` のみがこのインデントになっていますが、それ
