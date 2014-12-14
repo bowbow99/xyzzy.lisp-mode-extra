@@ -187,6 +187,10 @@
         (back-to-indentation)
         (return-from calc-lisp-indent+
           (current-column)))
+      (when (and (looking-at "\\s(")
+                 (forward-char -1))
+        (skip-white-backward)
+        (forward-char 1))
       (or (up-list -1 t)
           (return-from calc-lisp-indent+ 0))
       (cond
