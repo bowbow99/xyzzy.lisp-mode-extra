@@ -60,6 +60,7 @@
 
 
 ;;;; setup helper
+
 (export '(lisp-mode-extra-setup
           ))
 
@@ -344,5 +345,58 @@ nil      -- しない
 (defsetup compile/load-on-save ()
   (add-hook '*after-save-buffer-hook* 'lisp-compile/load-on-save))
 
+
+;;;; Literal Highligting
 
+;; FIXME: ハイライトの色（ハイライトするかどうかも含めて）を設定できるように
+
+(export (
+         ))
+
+(defparameter *lisp-regexp-keyword-list* nil)
+
+(defparameter *lisp-compiled-regexp-keyword-list* nil)
+
+(defun %lisp-update-compiled-regexp-keyword-list ()
+  (setf *lisp-compiled-regexp-keyword-list*
+        (compile-regexp-keyword-list (mapcar #'cdr *lisp-regexp-keyword-list*))))
+
+(defun %lisp-add-regexp-keyword-list (name regexp case-fold color context begin end)
+  (setf *lisp-regexp-keyword-list*
+        (cons (list name regexp case-fold color context begin end)
+              (delete name *lisp-regexp-keyword-list* :key #'car)))
+  (%lisp-update-compiled-regexp-keyword-list))
+
+(defmacro lisp-define-regexp-keyword (name color (&key (case-fold t) context begin end) &rest regexp-parts)
+  `(%lisp-add-regexp-keyword-list
+    ',name (concat ,@regexp-parts) ,case-fold ',color ,context ,begin ,end))
+(setf (get 'lisp-define-regexp-keyword 'ed:lisp-indent-hook) '3)
+
+(defun lisp-setup-regexp-keyword ()
+  (interactive)
+  (make-local-variable 'regexp-keyword-list)
+  (setf regexp-keyword-list (%lisp-update-compiled-regexp-keyword-list)))
+
+(defsetup literal-highlighting ()
+  (dolist (hook '(*lisp-mode-hook* *lisp-interaction-mode-hook*))
+    (add-hook hook 'lisp-setup-regexp-keyword)))
+
+
+(lisp-define-regexp-keyword keyword-symbol (:color 8) ()
+  "\\_<:\\(?:\\sw\\|\\s_\\)+\\_>")
+
+
+
+
+#+develop
+(progn
+  (lisp-mode-extra-setup)
+  (lisp-mode))
+
+;;;; FIXME: lisp-make-tags+
+;;;; FIXME: indentation for lambda-list
+;;;; FIXME: indentation for extended loop
+
+
+(provide "lisp-mode-extra")
 ;;; lisp-mode-extra.l ends here.
