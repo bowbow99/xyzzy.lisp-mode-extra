@@ -60,10 +60,12 @@
         (error e)))))
 
 (defun xldoc-show-info (sym info)
-  (cond ((stringp info)
-          (message "(~S ~A)" sym info))
-        ((listp info)
-          (message "(~S~{ ~:@(~A~)~})" sym info))))
+  (let ((*package* (or (ignore-errors (find-package (lisp-point-package-name)))
+                       *package*)))
+    (cond ((stringp info)
+            (message "(~S ~A)" sym info))
+          ((listp info)
+            (message "(~S~{ ~:@(~A~)~})" sym info)))))
 
 ;; post-command-hook
 (defun xldoc-maybe-display ()
