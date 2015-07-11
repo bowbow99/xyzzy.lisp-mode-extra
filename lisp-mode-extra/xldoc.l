@@ -53,7 +53,8 @@
   (handler-case
       (multiple-value-bind (sym from to)
           (xldoc-%find-target-symbol)
-        (values sym (xldoc-%symbol-function-info sym) from to))
+        (when (fboundp sym)
+          (values sym (xldoc-%symbol-function-info sym) from to)))
     (undefined-function (e)
       (if (up-list -1 t)
         (xldoc-%get-operator-info)
